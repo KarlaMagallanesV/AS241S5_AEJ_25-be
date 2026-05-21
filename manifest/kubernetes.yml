@@ -1,0 +1,70 @@
+# ========================================
+# GUÍA KUBERNETES - DEMO
+# Proyecto: YouTube/Spotify MP3 Downloader
+# ========================================
+
+# Instalar MiniKube - si no lo reconoce se debe reiniciar la terminal
+winget install Kubernetes.minikube  
+
+# Iniciar Minikube
+minikube start
+cd mongodb/manifest
+
+# ========================================
+# 1. DESPLIEGUE COMPLETO
+# ========================================
+kubectl apply -f karla-magallanes-25-namespace.yml
+kubectl apply -f karla-magallanes-25-secret.yml
+kubectl apply -f karla-magallanes-25-service.yml
+kubectl apply -f karla-magallanes-25-deployment.yml
+
+# Verificar que todo funciona
+kubectl get all -n karla-magallanes-25-namespace
+kubectl get pods -n karla-magallanes-25-namespace
+
+# ========================================
+# 2. DEMOSTRACIÓN DE DEPENDENCIAS (SECRET)
+# ========================================
+# Eliminar Secret y Deployment
+kubectl delete -f karla-magallanes-25-secret.yml
+kubectl delete -f karla-magallanes-25-deployment.yml
+
+# Recrear Deployment SIN Secret
+kubectl apply -f karla-magallanes-25-deployment.yml
+
+# Ver el error
+kubectl get pods -n karla-magallanes-25-namespace
+kubectl describe pod <pod-name> -n karla-magallanes-25-namespace
+
+# Restaurar Secret y reiniciar
+kubectl apply -f karla-magallanes-25-secret.yml
+kubectl rollout restart deployment karla-magallanes-25-deployment -n karla-magallanes-25-namespace
+
+# ========================================
+# 3. PROBAR LA APLICACIÓN
+# ========================================
+# Obtener URL del servicio
+minikube service karla-magallanes-25-service -n karla-magallanes-25-namespace --url
+
+# Probar endpoints (reemplaza la IP con la de tu Minikube)
+curl "https://friendly-engine-97qw6pq77gxpc9vgj-8085.app.github.dev/api/youtube/convert?videoId=tfDOSHtj4RE"
+
+curl -X POST "https://friendly-engine-97qw6pq77gxpc9vgj-8085.app.github.dev/api/spotify/download?songId=48i055G1OT5KxGGftwFxWy"
+
+# Port-forward para acceder desde localhost
+kubectl port-forward service/karla-magallanes-25-service 8090:30001 -n karla-magallanes-25-namespace
+
+# Acceder desde navegador: http://localhost:8085/api/youtube/convert?videoId=dQw4w9WgXcQ
+
+# ========================================
+# 4. COMANDOS ÚTILES
+# ========================================
+# Ver logs de un pod
+kubectl logs <pod-name> -n karla-magallanes-25-namespace
+
+# Ver eventos
+kubectl get events -n karla-magallanes-25-namespace --sort-by='.lastTimestamp'
+
+# Limpiar todo
+kubectl delete namespace karla-magallanes-25-namespace
+

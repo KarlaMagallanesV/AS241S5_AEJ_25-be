@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: mongodb
+  mongodb:
+    uri: ${DATABASE_URL:mongodb+srv://anyeli:Admin2828@cluster0.0wsphcx.mongodb.net/YouTube_MP3?retryWrites=true&w=majority}
+
+server:
+  port: ${SERVER_PORT:8085}
+
+rapidapi:
+  key: ${RAPIDAPI_KEY:1f2623a491msh486eff306f5d143p15adb0jsnf55f8409be7a}
+  host: ${RAPIDAPI_HOST:youtube-mp36.p.rapidapi.com}
+  spotify:
+    key: ${RAPIDAPI_SPOTIFY_KEY:1f2623a491msh486eff306f5d143p15adb0jsnf55f8409be7a}
+    host: ${RAPIDAPI_SPOTIFY_HOST:spotify-music-mp3-downloader-api.p.rapidapi.com}

@@ -1,0 +1,6 @@
+# kubectl create namespace karla-magallanes-25-namespace (COMANDO)
+# kubectl apply -f karla-magallanes-25-namespace.yml (yml)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: karla-magallanes-25-namespace

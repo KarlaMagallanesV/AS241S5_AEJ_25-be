@@ -1,0 +1,25 @@
+# kubectl apply -f karla-magallanes-25-deployment.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: karla-magallanes-25-deployment
+  namespace: karla-magallanes-25-namespace
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: karla-magallanes-25-deployment        # Debe coincidir con las etiquetas del Service
+  template:
+    metadata:
+      labels:
+        app: karla-magallanes-25-deployment      # Debe coincidir con las etiquetas del Service
+    spec:
+      containers:
+      - name: karla-magallanes-25-container
+        image: anyeli/spotify-youtube-download:1.0   # Reemplaza con tu imagen Docker Hub
+        imagePullPolicy: IfNotPresent        # Evitar traer siempre la última versión si hay una actual
+        ports:
+        - containerPort: 8085
+        envFrom:
+        - secretRef:
+            name: karla-magallanes-25-secret  # Esto cargará todos los valores como variables de entorno
