@@ -82,7 +82,7 @@ jobs:
           embed-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           embed-author-name: "Karla Anyeli Magallanes Vicente"
           embed-footer-text: "Backend — OK"
-          embed-timestamp: true
+
 
   # Notificación Discord: fallo
  
@@ -111,7 +111,7 @@ jobs:
           embed-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           embed-author-name: "Karla Anyeli Magallanes Vicente"
           embed-footer-text: "Revisa los logs del Backend"
-          embed-timestamp: true
+
           
   # Notificación Discord: Pull Request
   notify-pr:
@@ -154,4 +154,3 @@ jobs:
           embed-url: ${{ github.event.pull_request.html_url }}
           embed-author-name: "Karla Anyeli Magallanes Vicente"
           embed-footer-text: "AS241S5_AEJ_25-be"
-          embed-timestamp: true
