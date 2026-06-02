@@ -1,0 +1,157 @@
+name: Integración Continua + Notificaciones Discord — AS241S5_AEJ_25-be
+
+on:
+  push:
+    branches:
+      - develop
+      - Spring-WebFlux-NOSQL
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - develop
+      - Spring-WebFlux-NOSQL
+
+concurrency:
+  group: ci-backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+# Test de Construción, Prueba y Empaquetamiento del Backend
+  backend:
+    name: AS241S5_AEJ_25-be
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build y ejecutar tests
+        run: mvn -B verify --no-transfer-progress
+        env:
+          SPRING_PROFILES_ACTIVE: test
+          DATABASE_URL:          ${{ secrets.DATABASE_URL }}
+          RAPIDAPI_KEY:          ${{ secrets.RAPIDAPI_KEY }}
+          RAPIDAPI_HOST:         ${{ secrets.RAPIDAPI_HOST }}
+          RAPIDAPI_SPOTIFY_KEY:  ${{ secrets.RAPIDAPI_SPOTIFY_KEY }}
+          RAPIDAPI_SPOTIFY_HOST: ${{ secrets.RAPIDAPI_SPOTIFY_HOST }}
+
+      - name: Publicar resultados de tests
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Tests Backend
+          path: target/surefire-reports/*.xml 
+          reporter: java-junit
+
+      - name: Subir JAR como artefacto
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: target/*.jar               
+          retention-days: 3
+
+  # Notificación Discord: éxito
+  notify-success:
+    name: Notificar Discord — Éxito
+    needs: [backend]
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+      - name: Enviar notificación de éxito a Discord
+        uses: tsickert/discord-webhook@v6.0.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          embed-title: "Pipeline exitoso — AS241S5_AEJ_25-be"
+          embed-description: |
+            **Repositorio:** ${{ github.repository }}
+            **Branch:** `${{ github.ref_name }}`
+            **Evento:** `${{ github.event_name }}`
+            **Commit:** `${{ github.sha }}`
+            **Autor:** ${{ github.actor }}
+            **Mensaje:** ${{ github.event.head_commit.message }}
+          embed-color: 16765404
+          embed-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          embed-author-name: "Karla Anyeli Magallanes Vicente"
+          embed-footer-text: "Backend — OK"
+          embed-timestamp: true
+
+  # Notificación Discord: fallo
+ 
+  notify-failure:
+    name: Notificar Discord — Fallo
+    needs: [backend]
+    runs-on: ubuntu-latest
+    if: failure()
+
+    steps:
+      - name: Enviar notificación de fallo a Discord
+        uses: tsickert/discord-webhook@v6.0.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          embed-title: "Pipeline fallido — AS241S5_AEJ_25-be"
+          embed-description: |
+            **Repositorio:** ${{ github.repository }}
+            **Branch:** `${{ github.ref_name }}`
+            **Evento:** `${{ github.event_name }}`
+            **Commit:** `${{ github.sha }}`
+            **Autor:** ${{ github.actor }}
+            **Mensaje:** ${{ github.event.head_commit.message }}
+
+            > Revisa los logs del run para ver qué falló.
+          embed-color: 16765404
+          embed-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          embed-author-name: "Karla Anyeli Magallanes Vicente"
+          embed-footer-text: "Revisa los logs del Backend"
+          embed-timestamp: true
+          
+  # Notificación Discord: Pull Request
+  notify-pr:
+    name: Notificar Discord — Evento PR
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Determinar color y estado del PR
+        id: pr-info
+        run: |
+          if [ "${{ github.event.action }}" == "closed" ] && [ "${{ github.event.pull_request.merged }}" == "true" ]; then
+            echo "color=7506394"   >> $GITHUB_OUTPUT
+            echo "status=Mergeado" >> $GITHUB_OUTPUT
+            echo "icon=🔀"         >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.action }}" == "closed" ]; then
+            echo "color=15158332"  >> $GITHUB_OUTPUT
+            echo "status=Cerrado"  >> $GITHUB_OUTPUT
+            echo "icon=🚫"         >> $GITHUB_OUTPUT
+          else
+            echo "color=3447003"   >> $GITHUB_OUTPUT
+            echo "status=Abierto"  >> $GITHUB_OUTPUT
+            echo "icon=🔔"         >> $GITHUB_OUTPUT
+          fi
+
+      - name: Enviar notificación de Pull Request a Discord
+        uses: tsickert/discord-webhook@v6.0.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          embed-title: "${{ steps.pr-info.outputs.icon }} PR ${{ steps.pr-info.outputs.status }} — #${{ github.event.pull_request.number }}"
+          embed-description: |
+            **${{ github.event.pull_request.title }}**
+
+            **Repo:** ${{ github.repository }}
+            **Base:** `${{ github.event.pull_request.base.ref }}` ← `${{ github.event.pull_request.head.ref }}`
+            **Autor:** ${{ github.event.pull_request.user.login }}
+            **Commits:** ${{ github.event.pull_request.commits }}
+            **Archivos:** ${{ github.event.pull_request.changed_files }} archivos modificados
+          embed-color: ${{ steps.pr-info.outputs.color }}
+          embed-url: ${{ github.event.pull_request.html_url }}
+          embed-author-name: "Karla Anyeli Magallanes Vicente"
+          embed-footer-text: "AS241S5_AEJ_25-be"
+          embed-timestamp: true
