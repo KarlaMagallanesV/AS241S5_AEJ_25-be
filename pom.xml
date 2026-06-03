@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.5</version>
+		<version>4.0.6</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>youtubeMp3</groupId>
@@ -28,6 +28,8 @@
 	</scm>
 	<properties>
 		<java.version>17</java.version>
+		<netty.version>4.2.13.Final</netty.version>
+		<jackson-bom.version>3.1.1</jackson-bom.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -54,11 +56,6 @@
 		<dependency>
     		<groupId>org.springframework.boot</groupId>
     		<artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
-		</dependency>
-	<!-- Jackson para procesamiento JSON -->
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
 		</dependency>
 	<!-- Dotenv para cargar variables de entorno desde .env -->
 		<dependency>

@@ -8,15 +8,16 @@ import youtubeMp3.mongodb.model.SpotifyDownloadModel;
 import youtubeMp3.mongodb.repository.SpotifyRepository;
 import youtubeMp3.mongodb.util.UrlParserUtil;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 
 @Service
 public class SpotifyService {
@@ -36,7 +37,7 @@ public class SpotifyService {
         this.webClient = WebClient.builder()
                 .baseUrl("https://spotify-music-mp3-downloader-api.p.rapidapi.com")
                 .build();
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = JsonMapper.builder().build();
     }
 
     public Mono<SpotifyDownloadModel> downloadSong(String urlOrId) {
@@ -74,7 +75,7 @@ public class SpotifyService {
                             if (data.has("thumbnail"))
                                 model.setCoverImage(data.get("thumbnail").asText());
                         }
-                    } catch (JsonProcessingException e) {
+                    } catch (JacksonException e) {
                         model.setStatus("parse_error: " + e.getMessage());
                     }
                     return spotifyRepository.save(model);
